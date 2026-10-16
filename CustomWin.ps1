@@ -1335,6 +1335,62 @@ function Get-Office2024LtscVersion {
 
 
 
+function Test-Office2024LtscSourceReady {
+
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$OfficeDir
+    )
+
+
+    $DataDir = Join-Path $OfficeDir "Office\Data"
+
+    $Catalog = Join-Path $DataDir "v64.cab"
+
+
+    if (-not (Test-Path -LiteralPath $Catalog)) {
+
+        return $false
+    }
+
+
+    $Core = Get-ChildItem `
+        -LiteralPath $DataDir `
+        -Recurse `
+        -Filter "stream.x64.x-none.dat" `
+        -File `
+        -ErrorAction SilentlyContinue |
+        Where-Object { $_.Length -ge 1GB } |
+        Select-Object -First 1
+
+
+    if (-not $Core) {
+
+        return $false
+    }
+
+
+    $Language = Get-ChildItem `
+        -LiteralPath $DataDir `
+        -Recurse `
+        -Filter "stream.x64.es-es.dat" `
+        -File `
+        -ErrorAction SilentlyContinue |
+        Where-Object { $_.Length -ge 50MB } |
+        Select-Object -First 1
+
+
+    if (-not $Language) {
+
+        return $false
+    }
+
+
+    return $true
+}
+
+
+
 function Install-Office2024Ltsc {
 
     param (
@@ -1354,7 +1410,7 @@ function Install-Office2024Ltsc {
 
     if (-not [string]::IsNullOrWhiteSpace($Installed)) {
 
-        Write-Log "Office 2024 LTSC ya esta instalado ($Installed). Se omite." "OK"
+        Write-Log "Office 2024 LTSC ya esta instalado ($Installed). No se descarga ni se reinstala." "OK"
 
         return
     }
@@ -1455,23 +1511,38 @@ function Install-Office2024Ltsc {
     [System.IO.File]::WriteAllText($ConfigPath, $ConfigXml, $Utf8)
 
 
-    Write-Log "Descargando los archivos de Office 2024 LTSC. Puede tardar bastante..."
+    if (Test-Office2024LtscSourceReady -OfficeDir $OfficeDir) {
+
+        Write-Log "Los archivos de Office 2024 LTSC ya estan en $OfficeDir. Se omite la descarga." "OK"
+
+    }
+    else {
+
+        Write-Log "Descargando los archivos de Office 2024 LTSC. Puede tardar bastante..."
 
 
-    $DownloadCode = Invoke-InstallerProcess `
-        -FilePath $SetupExe `
-        -Arguments "/download `"$ConfigPath`"" `
-        -TimeoutSeconds 14400 `
-        -WorkingDirectory $OfficeDir
+        $DownloadCode = Invoke-InstallerProcess `
+            -FilePath $SetupExe `
+            -Arguments "/download `"$ConfigPath`"" `
+            -TimeoutSeconds 14400 `
+            -WorkingDirectory $OfficeDir
 
 
-    if ($DownloadCode -notin @(0, 3010, 1641, $null)) {
+        if ($DownloadCode -notin @(0, 3010, 1641, $null)) {
 
-        throw "La descarga de Office 2024 LTSC fallo. Codigo: $DownloadCode."
+            throw "La descarga de Office 2024 LTSC fallo. Codigo: $DownloadCode."
+        }
+
+
+        if (-not (Test-Office2024LtscSourceReady -OfficeDir $OfficeDir)) {
+
+            throw "La descarga termino, pero no quedo el paquete completo de Office en $OfficeDir."
+        }
+
+
+        Write-Log "Descarga de Office completada." "OK"
     }
 
-
-    Write-Log "Descarga de Office completada." "OK"
 
     Write-Log "Instalando Office 2024 LTSC sin ventanas..."
 
@@ -5409,6 +5480,10 @@ function Get-CustomWinChoices {
             Text = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
         },
         @{
+            Id = "PowerShell"
+            Text = "Correr Powershell"
+        },
+        @{
             Id = "AnyDesk"
             Text = "AnyDesk oculto, con password de acceso desatendido"
         },
@@ -5887,7 +5962,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261016c"
+    Write-Log "Revision: 20261016e"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -5982,6 +6057,12 @@ try {
 
             Add-DeployFailure "Office 2024 LTSC (linea ${FailLine}): $($_.Exception.Message)"
         }
+    }
+
+
+    if ($Selected -contains "PowerShell") {
+
+        Write-Log "Correr Powershell esta en el menu, pero todavia no tiene una accion." "WARN"
     }
 
 
@@ -6081,6 +6162,12 @@ try {
         if ($Selected -contains "Office") {
 
             Write-Host "Office 2024 LTSC                : INSTALADO"
+        }
+
+
+        if ($Selected -contains "PowerShell") {
+
+            Write-Host "Correr Powershell               : SIN ACCION"
         }
 
 
