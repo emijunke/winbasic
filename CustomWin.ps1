@@ -5446,7 +5446,7 @@ function Show-CustomWinConsole {
 
     foreach ($Choice in $Choices) {
 
-        $Checked[$Choice.Id] = $true
+        $Checked[$Choice.Id] = $false
     }
 
 
@@ -5543,6 +5543,27 @@ function Show-CustomWinConsole {
 
 function Show-CustomWinForm {
 
+    if (-not ("CustomWin.CustomWinWindow" -as [type])) {
+
+        Add-Type -Namespace CustomWin -Name CustomWinWindow -MemberDefinition @"
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern bool SetWindowPos(System.IntPtr hWnd, System.IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern bool SetForegroundWindow(System.IntPtr hWnd);
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern bool BringWindowToTop(System.IntPtr hWnd);
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern System.IntPtr GetForegroundWindow();
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, System.IntPtr ProcessId);
+[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+public static extern uint GetCurrentThreadId();
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+"@
+    }
+
+
     $Choices = @(Get-CustomWinChoices)
 
     $Form = New-Object System.Windows.Forms.Form
@@ -5579,7 +5600,7 @@ function Show-CustomWinForm {
 
     $Hint = New-Object System.Windows.Forms.Label
 
-    $Hint.Text = "Tilda las opciones y presiona Aplicar. Lo que no este tildado no se modifica."
+    $Hint.Text = "Nada empieza tildado. Marca lo que queres aplicar. Lo demas no se modifica."
 
     $Hint.AutoSize = $false
 
@@ -5605,7 +5626,7 @@ function Show-CustomWinForm {
 
     foreach ($Choice in $Choices) {
 
-        [void]$List.Items.Add($Choice.Text, $true)
+        [void]$List.Items.Add($Choice.Text, $false)
     }
 
 
@@ -5692,6 +5713,7 @@ function Show-CustomWinForm {
         if (-not $AnyChecked) {
 
             [void][System.Windows.Forms.MessageBox]::Show(
+                $Form,
                 "Tilda al menos una opcion.",
                 "CustomWin"
             )
@@ -5710,6 +5732,66 @@ function Show-CustomWinForm {
 
     $Form.AcceptButton = $Apply
 
+
+    $Form.Add_Shown({
+
+        $Handle = $Form.Handle
+
+        $Flags = [uint32](0x0001 -bor 0x0002 -bor 0x0040)
+
+        [void][CustomWin.CustomWinWindow]::SetWindowPos(
+            $Handle,
+            [IntPtr](-1),
+            0,
+            0,
+            0,
+            0,
+            $Flags
+        )
+
+        $Foreground = [CustomWin.CustomWinWindow]::GetForegroundWindow()
+
+        $ForegroundThread = [CustomWin.CustomWinWindow]::GetWindowThreadProcessId(
+            $Foreground,
+            [IntPtr]::Zero
+        )
+
+        $CurrentThread = [CustomWin.CustomWinWindow]::GetCurrentThreadId()
+
+
+        if ($ForegroundThread -ne $CurrentThread) {
+
+            [void][CustomWin.CustomWinWindow]::AttachThreadInput(
+                $ForegroundThread,
+                $CurrentThread,
+                $true
+            )
+        }
+
+
+        [void][CustomWin.CustomWinWindow]::BringWindowToTop($Handle)
+
+        [void][CustomWin.CustomWinWindow]::SetForegroundWindow($Handle)
+
+
+        if ($ForegroundThread -ne $CurrentThread) {
+
+            [void][CustomWin.CustomWinWindow]::AttachThreadInput(
+                $ForegroundThread,
+                $CurrentThread,
+                $false
+            )
+        }
+
+
+        $Form.TopMost = $true
+
+        $Form.Activate()
+
+    }.GetNewClosure())
+
+
+    $Form.TopMost = $true
 
     $Result = $Form.ShowDialog()
 
@@ -5805,7 +5887,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261016b"
+    Write-Log "Revision: 20261016c"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
