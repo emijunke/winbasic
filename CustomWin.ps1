@@ -5,7 +5,8 @@
 .DESCRIPTION
     - Requiere PowerShell ejecutado como Administrador.
     - Al ejecutarse muestra una lista para tildar que se quiere aplicar.
-    - Puede instalar Notepad++, 7-Zip, Firefox, Chrome, PuTTY, WinSCP y VMware Tools.
+    - Puede instalar Notepad++, 7-Zip, Firefox, Chrome, PuTTY, WinSCP,
+      VMware Tools y Office 2024 LTSC Professional Plus en espanol.
       Si alguno ya esta instalado, no lo vuelve a descargar.
       7-Zip no firma su instalador: se comprueba el SHA-256 de la
       release oficial.
@@ -290,7 +291,9 @@ function Invoke-InstallerProcess {
         [Parameter(Mandatory = $true)]
         [string]$Arguments,
 
-        [int]$TimeoutSeconds = 900
+        [int]$TimeoutSeconds = 900,
+
+        [string]$WorkingDirectory
     )
 
 
@@ -303,6 +306,12 @@ function Invoke-InstallerProcess {
     $StartInfo.UseShellExecute = $false
 
     $StartInfo.CreateNoWindow = $true
+
+
+    if (-not [string]::IsNullOrWhiteSpace($WorkingDirectory)) {
+
+        $StartInfo.WorkingDirectory = $WorkingDirectory
+    }
 
 
     $Process = New-Object System.Diagnostics.Process
@@ -1220,6 +1229,278 @@ function Install-BasicApplications {
             Add-DeployFailure "$($Package.Name) (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
+}
+
+
+
+function Get-OfficeDeploymentToolUrl {
+
+    $Pattern = 'https://download\.microsoft\.com/download/[0-9a-fA-F-]+/officedeploymenttool_[0-9-]+\.exe'
+
+    $Fallback = "https://download.microsoft.com/download/6c1eeb25-cf8b-41d9-8d0d-cc1dbc032140/officedeploymenttool_20326-20112.exe"
+
+
+    try {
+
+        $Page = Invoke-WebRequest `
+            -Uri "https://www.microsoft.com/en-us/download/details.aspx?id=49117" `
+            -UseBasicParsing `
+            -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+
+        $Match = [regex]::Match($Page.Content, $Pattern)
+
+
+        if ($Match.Success) {
+
+            return $Match.Value
+        }
+    }
+    catch {
+    }
+
+
+    return $Fallback
+}
+
+
+
+function Get-Office2024LtscVersion {
+
+    $Base = $null
+
+
+    try {
+
+        $Base = [Microsoft.Win32.RegistryKey]::OpenBaseKey(
+            [Microsoft.Win32.RegistryHive]::LocalMachine,
+            [Microsoft.Win32.RegistryView]::Registry64
+        )
+
+        $Key = $Base.OpenSubKey(
+            "SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
+        )
+
+
+        if ($Key) {
+
+            $Products = [string]$Key.GetValue("ProductReleaseIds")
+
+            $Version = [string]$Key.GetValue("VersionToReport")
+
+            $Key.Close()
+
+
+            foreach ($Product in ($Products -split ",")) {
+
+                if ($Product.Trim() -eq "ProPlus2024Volume") {
+
+                    if ([string]::IsNullOrWhiteSpace($Version)) {
+
+                        return "ProPlus2024Volume"
+                    }
+
+
+                    return $Version.Trim()
+                }
+            }
+        }
+    }
+    finally {
+
+        if ($Base) {
+
+            $Base.Close()
+        }
+    }
+
+
+    foreach ($Entry in (Get-UninstallEntries)) {
+
+        if ($Entry.DisplayName -match '^Microsoft Office LTSC Professional Plus 2024') {
+
+            if ([string]::IsNullOrWhiteSpace([string]$Entry.DisplayVersion)) {
+
+                return [string]$Entry.DisplayName
+            }
+
+
+            return [string]$Entry.DisplayVersion
+        }
+    }
+
+
+    return ""
+}
+
+
+
+function Install-Office2024Ltsc {
+
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Architecture
+    )
+
+
+    if ($Architecture -ne "x64") {
+
+        throw "Esta configuracion de Office 2024 LTSC es solo para Windows de 64 bits."
+    }
+
+
+    $Installed = Get-Office2024LtscVersion
+
+
+    if (-not [string]::IsNullOrWhiteSpace($Installed)) {
+
+        Write-Log "Office 2024 LTSC ya esta instalado ($Installed). Se omite." "OK"
+
+        return
+    }
+
+
+    $OfficeDir = "C:\Office2024LTSC"
+
+    $SetupExe = Join-Path $OfficeDir "setup.exe"
+
+    $ConfigPath = Join-Path $OfficeDir "configuration.xml"
+
+    New-Item -ItemType Directory -Path $OfficeDir -Force | Out-Null
+
+
+    Write-Log "Preparando Office 2024 LTSC en $OfficeDir..."
+
+
+    try {
+
+        $ToolUrl = Get-OfficeDeploymentToolUrl
+
+        $ToolFile = Join-Path $OfficeDir "officedeploymenttool.exe"
+
+
+        Write-Log "Descargando Office Deployment Tool..."
+
+        Write-Log "Origen: $ToolUrl"
+
+        Save-WebFile -Uri $ToolUrl -Destination $ToolFile
+
+
+        $ToolSize = (Get-Item -LiteralPath $ToolFile).Length
+
+
+        if ($ToolSize -lt 400KB) {
+
+            throw "El Office Deployment Tool descargado parece invalido. Tamano: $ToolSize bytes."
+        }
+
+
+        $Trust = Test-InstallerTrust -Path $ToolFile
+
+        Write-Log "Integridad de Office Deployment Tool: $Trust" "OK"
+
+        Unblock-File -LiteralPath $ToolFile -ErrorAction SilentlyContinue
+
+
+        $ExtractLog = Join-Path $OfficeDir "odt-extract.log"
+
+        $ExtractCode = Invoke-InstallerProcess `
+            -FilePath $ToolFile `
+            -Arguments "/quiet /norestart /extract:`"$OfficeDir`" /log:`"$ExtractLog`"" `
+            -TimeoutSeconds 600 `
+            -WorkingDirectory $OfficeDir
+
+
+        if ($ExtractCode -notin @(0, 3010, 1641, $null)) {
+
+            throw "No se pudo extraer setup.exe. Codigo: $ExtractCode."
+        }
+    }
+    catch {
+
+        if (-not (Test-Path -LiteralPath $SetupExe)) {
+
+            throw
+        }
+
+
+        Write-Log "No se pudo actualizar setup.exe. Se usa el que ya esta en $OfficeDir. $($_.Exception.Message)" "WARN"
+    }
+
+
+    if (-not (Test-Path -LiteralPath $SetupExe)) {
+
+        throw "No se encontro setup.exe en $OfficeDir."
+    }
+
+
+    $ConfigXml = @(
+        '<Configuration>'
+        '  <Add OfficeClientEdition="64" Channel="PerpetualVL2024">'
+        '    <Product ID="ProPlus2024Volume">'
+        '      <Language ID="es-es" />'
+        '      <ExcludeApp ID="Lync" />'
+        '      <ExcludeApp ID="OneDrive" />'
+        '    </Product>'
+        '  </Add>'
+        '  <Display Level="None" AcceptEULA="TRUE" />'
+        '  <Property Name="SharedComputerLicensing" Value="0" />'
+        '  <Property Name="FORCEAPPSHUTDOWN" Value="FALSE" />'
+        '  <Property Name="DeviceBasedLicensing" Value="0" />'
+        '</Configuration>'
+    ) -join "`r`n"
+
+    $Utf8 = New-Object System.Text.UTF8Encoding $false
+
+    [System.IO.File]::WriteAllText($ConfigPath, $ConfigXml, $Utf8)
+
+
+    Write-Log "Descargando los archivos de Office 2024 LTSC. Puede tardar bastante..."
+
+
+    $DownloadCode = Invoke-InstallerProcess `
+        -FilePath $SetupExe `
+        -Arguments "/download `"$ConfigPath`"" `
+        -TimeoutSeconds 14400 `
+        -WorkingDirectory $OfficeDir
+
+
+    if ($DownloadCode -notin @(0, 3010, 1641, $null)) {
+
+        throw "La descarga de Office 2024 LTSC fallo. Codigo: $DownloadCode."
+    }
+
+
+    Write-Log "Descarga de Office completada." "OK"
+
+    Write-Log "Instalando Office 2024 LTSC sin ventanas..."
+
+
+    $ConfigureCode = Invoke-InstallerProcess `
+        -FilePath $SetupExe `
+        -Arguments "/configure `"$ConfigPath`"" `
+        -TimeoutSeconds 7200 `
+        -WorkingDirectory $OfficeDir
+
+
+    if ($ConfigureCode -notin @(0, 3010, 1641, $null)) {
+
+        throw "La instalacion de Office 2024 LTSC fallo. Codigo: $ConfigureCode."
+    }
+
+
+    $Installed = Get-Office2024LtscVersion
+
+
+    if ([string]::IsNullOrWhiteSpace($Installed)) {
+
+        throw "Office 2024 LTSC no quedo registrado despues de la instalacion."
+    }
+
+
+    Write-Log "Office 2024 LTSC instalado ($Installed)." "OK"
+
+    Write-Log "Los archivos de instalacion quedan en $OfficeDir."
 }
 
 
@@ -5124,6 +5405,10 @@ function Get-CustomWinChoices {
             Text = "VMware Tools (ultima version, se omite si ya esta)"
         },
         @{
+            Id = "Office"
+            Text = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
+        },
+        @{
             Id = "AnyDesk"
             Text = "AnyDesk oculto, con password de acceso desatendido"
         },
@@ -5520,7 +5805,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261016a"
+    Write-Log "Revision: 20261016b"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -5599,6 +5884,22 @@ try {
     if ($AppNames.Count -gt 0) {
 
         Install-BasicApplications -Architecture $Architecture -Names $AppNames
+    }
+
+
+    if ($Selected -contains "Office") {
+
+        try {
+
+            Install-Office2024Ltsc -Architecture $Architecture
+
+        }
+        catch {
+
+            $FailLine = $_.InvocationInfo.ScriptLineNumber
+
+            Add-DeployFailure "Office 2024 LTSC (linea ${FailLine}): $($_.Exception.Message)"
+        }
     }
 
 
@@ -5692,6 +5993,12 @@ try {
 
                 Write-Host "AnyDesk ID                      : $Script:NewID"
             }
+        }
+
+
+        if ($Selected -contains "Office") {
+
+            Write-Host "Office 2024 LTSC                : INSTALADO"
         }
 
 
