@@ -17,9 +17,10 @@
       autenticacion de nivel de red y deshabilitar IPv6.
     - Puede ocultar la busqueda de la barra de tareas y alinearla
       a la izquierda.
-    - Activar Office 2024 LTSC baja y ejecuta
+    - Correr Powershell baja y ejecuta
       https://raw.githubusercontent.com/emijunke/winbasic/main/ps.ps1
     - Lo que no se tilda no se modifica.
+    - Los nombres de la ventana estan al principio del archivo.
     - Genera log en C:\ProgramData\CustomWin.
 
 .EXAMPLE
@@ -32,6 +33,28 @@
     $UnattendedPassword = 'PASSWORD'
     irm "https://raw.githubusercontent.com/emijunke/anydeskdeploy/main/CustomWin.ps1" | iex
 #>
+
+# ============================================================
+# Nombres que aparecen en la ventana.
+# Cambie solo el texto entre comillas.
+# No borre ni renombre las variables.
+# ============================================================
+$Script:Item_Notepad = "Notepad++ (ultima version, se omite si ya esta)"
+$Script:Item_7Zip = "7-Zip (ultima version, se omite si ya esta)"
+$Script:Item_Firefox = "Firefox (ultima version, se omite si ya esta)"
+$Script:Item_Chrome = "Google Chrome (ultima version, se omite si ya esta)"
+$Script:Item_PuTTY = "PuTTY (ultima version, se omite si ya esta)"
+$Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
+$Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
+$Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
+$Script:Item_Powershell = "Correr Powershell"
+$Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
+$Script:Item_Firewall = "Deshabilitar el Firewall de Windows en todas las redes"
+$Script:Item_EscritorioRemoto = "Habilitar Escritorio remoto sin autenticacion de nivel de red"
+$Script:Item_IPv6 = "Deshabilitar IPv6 en todo el sistema"
+$Script:Item_Busqueda = "Ocultar el campo de busqueda de la barra de tareas"
+$Script:Item_BarraTareas = "Alinear los iconos de la barra de tareas a la izquierda"
+
 
 # Windows PowerShell 5.1 rechaza #requires y param() cuando el script
 # se ejecuta con Invoke-Expression (irm | iex).
@@ -5451,63 +5474,63 @@ function Get-CustomWinChoices {
     return @(
         @{
             Id = "Notepad++"
-            Text = "Notepad++ (ultima version, se omite si ya esta)"
+            Text = $Script:Item_Notepad
         },
         @{
             Id = "7-Zip"
-            Text = "7-Zip (ultima version, se omite si ya esta)"
+            Text = $Script:Item_7Zip
         },
         @{
             Id = "Firefox"
-            Text = "Firefox (ultima version, se omite si ya esta)"
+            Text = $Script:Item_Firefox
         },
         @{
             Id = "Google Chrome"
-            Text = "Google Chrome (ultima version, se omite si ya esta)"
+            Text = $Script:Item_Chrome
         },
         @{
             Id = "PuTTY"
-            Text = "PuTTY (ultima version, se omite si ya esta)"
+            Text = $Script:Item_PuTTY
         },
         @{
             Id = "WinSCP"
-            Text = "WinSCP (ultima version, se omite si ya esta)"
+            Text = $Script:Item_WinSCP
         },
         @{
             Id = "VMware Tools"
-            Text = "VMware Tools (ultima version, se omite si ya esta)"
+            Text = $Script:Item_VMware
         },
         @{
             Id = "Office"
-            Text = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
+            Text = $Script:Item_Office
         },
         @{
             Id = "PowerShell"
-            Text = "Activar Office 2024 LTSC"
+            Text = $Script:Item_Powershell
         },
         @{
             Id = "AnyDesk"
-            Text = "AnyDesk oculto, con password de acceso desatendido"
+            Text = $Script:Item_AnyDesk
         },
         @{
             Id = "Firewall"
-            Text = "Deshabilitar el Firewall de Windows en todas las redes"
+            Text = $Script:Item_Firewall
         },
         @{
             Id = "Rdp"
-            Text = "Habilitar Escritorio remoto sin autenticacion de nivel de red"
+            Text = $Script:Item_EscritorioRemoto
         },
         @{
             Id = "IPv6"
-            Text = "Deshabilitar IPv6 en todo el sistema"
+            Text = $Script:Item_IPv6
         },
         @{
             Id = "Search"
-            Text = "Ocultar el campo de busqueda de la barra de tareas"
+            Text = $Script:Item_Busqueda
         },
         @{
             Id = "Taskbar"
-            Text = "Alinear los iconos de la barra de tareas a la izquierda"
+            Text = $Script:Item_BarraTareas
         }
     )
 }
@@ -5964,7 +5987,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261016f"
+    Write-Log "Revision: 20261016g"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6066,7 +6089,7 @@ try {
 
         try {
 
-            Write-Log "Ejecutando Activar Office 2024 LTSC."
+            Write-Log "Ejecutando Correr Powershell."
 
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -6098,14 +6121,14 @@ try {
 
             Invoke-Expression $PowerShellScript
 
-            Write-Log "Activar Office 2024 LTSC termino." "OK"
+            Write-Log "Correr Powershell termino." "OK"
 
         }
         catch {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Activar Office 2024 LTSC (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Correr Powershell (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
@@ -6211,7 +6234,7 @@ try {
 
         if ($Selected -contains "PowerShell") {
 
-            Write-Host "Activar Office 2024 LTSC               : EJECUTADO"
+            Write-Host "Correr Powershell               : EJECUTADO"
         }
 
 
