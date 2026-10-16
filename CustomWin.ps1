@@ -5,7 +5,7 @@
 .DESCRIPTION
     - Requiere PowerShell ejecutado como Administrador.
     - Al ejecutarse muestra una lista para tildar que se quiere aplicar.
-    - Puede instalar Notepad++, 7-Zip, Firefox, Chrome, PuTTY y VMware Tools.
+    - Puede instalar Notepad++, 7-Zip, Firefox, Chrome, PuTTY, WinSCP y VMware Tools.
       Si alguno ya esta instalado, no lo vuelve a descargar.
       7-Zip no firma su instalador: se comprueba el SHA-256 de la
       release oficial.
@@ -661,6 +661,59 @@ function Get-PuttyUrl {
 
 
 
+function Get-WinScpPackage {
+
+    $Page = Invoke-WebRequest `
+        -Uri "https://winscp.net/eng/downloads.php" `
+        -UseBasicParsing
+
+
+    $Listed = [regex]::Match(
+        $Page.Content,
+        '/download/WinSCP-[0-9.]+\.msi/download'
+    )
+
+
+    if (-not $Listed.Success) {
+
+        throw "No se encontro el instalador MSI de WinSCP."
+    }
+
+
+    $Details = Invoke-WebRequest `
+        -Uri ("https://winscp.net" + $Listed.Value) `
+        -UseBasicParsing
+
+
+    $File = [regex]::Match(
+        $Details.Content,
+        'https://cdn\.winscp\.net/files/WinSCP-[0-9.]+\.msi\?secure=[A-Za-z0-9_/=+-]+,[0-9]+'
+    )
+
+
+    if (-not $File.Success) {
+
+        throw "No se encontro el enlace oficial del MSI de WinSCP."
+    }
+
+
+    $Digest = [regex]::Match($Details.Content, 'SHA-256:\s*([0-9a-fA-F]{64})')
+
+
+    if (-not $Digest.Success) {
+
+        throw "WinSCP no publico el SHA-256 del instalador."
+    }
+
+
+    return [pscustomobject]@{
+        Url    = $File.Value
+        Sha256 = $Digest.Groups[1].Value.ToLowerInvariant()
+    }
+}
+
+
+
 function Get-VMwareToolsUrl {
 
     param (
@@ -1040,6 +1093,14 @@ function Install-BasicApplications {
             ExtraPaths = @()
         },
         @{
+            Name = "WinSCP"
+            File = "winscp-setup.msi"
+            Kind = "MSI"
+            Pattern = '^WinSCP($| )'
+            RelativePaths = @("WinSCP\WinSCP.exe")
+            ExtraPaths = @()
+        },
+        @{
             Name = "VMware Tools"
             File = "vmware-tools-setup.exe"
             Kind = "NSIS"
@@ -1117,6 +1178,15 @@ function Install-BasicApplications {
                 "PuTTY" {
 
                     $Url = Get-PuttyUrl -Architecture $Architecture
+                }
+
+                "WinSCP" {
+
+                    $WinScp = Get-WinScpPackage
+
+                    $Url = $WinScp.Url
+
+                    $Sha256 = $WinScp.Sha256
                 }
 
                 "VMware Tools" {
@@ -5046,6 +5116,10 @@ function Get-CustomWinChoices {
             Text = "PuTTY (ultima version, se omite si ya esta)"
         },
         @{
+            Id = "WinSCP"
+            Text = "WinSCP (ultima version, se omite si ya esta)"
+        },
+        @{
             Id = "VMware Tools"
             Text = "VMware Tools (ultima version, se omite si ya esta)"
         },
@@ -5446,7 +5520,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261008c"
+    Write-Log "Revision: 20261016a"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -5517,7 +5591,7 @@ try {
 
     $AppNames = @(
         $Selected | Where-Object {
-            $_ -in @("Notepad++", "7-Zip", "Firefox", "Google Chrome", "PuTTY", "VMware Tools")
+            $_ -in @("Notepad++", "7-Zip", "Firefox", "Google Chrome", "PuTTY", "WinSCP", "VMware Tools")
         }
     )
 
