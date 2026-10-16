@@ -17,7 +17,7 @@
       autenticacion de nivel de red y deshabilitar IPv6.
     - Puede ocultar la busqueda de la barra de tareas y alinearla
       a la izquierda.
-    - Correr Powershell baja y ejecuta
+    - Activar Office 2024 LTSC baja y ejecuta
       https://raw.githubusercontent.com/emijunke/winbasic/main/ps.ps1
     - Lo que no se tilda no se modifica.
     - Genera log en C:\ProgramData\CustomWin.
@@ -5483,7 +5483,7 @@ function Get-CustomWinChoices {
         },
         @{
             Id = "PowerShell"
-            Text = "Correr Powershell"
+            Text = "Activar Office 2024 LTSC"
         },
         @{
             Id = "AnyDesk"
@@ -6066,7 +6066,7 @@ try {
 
         try {
 
-            Write-Log "Ejecutando Correr Powershell."
+            Write-Log "Ejecutando Activar Office 2024 LTSC."
 
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -6098,14 +6098,14 @@ try {
 
             Invoke-Expression $PowerShellScript
 
-            Write-Log "Correr Powershell termino." "OK"
+            Write-Log "Activar Office 2024 LTSC termino." "OK"
 
         }
         catch {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Correr Powershell (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Activar Office 2024 LTSC (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
@@ -6211,7 +6211,7 @@ try {
 
         if ($Selected -contains "PowerShell") {
 
-            Write-Host "Correr Powershell               : EJECUTADO"
+            Write-Host "Activar Office 2024 LTSC               : EJECUTADO"
         }
 
 
