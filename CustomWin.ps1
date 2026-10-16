@@ -17,6 +17,8 @@
       autenticacion de nivel de red y deshabilitar IPv6.
     - Puede ocultar la busqueda de la barra de tareas y alinearla
       a la izquierda.
+    - Correr Powershell baja y ejecuta
+      https://raw.githubusercontent.com/emijunke/winbasic/main/ps.ps1
     - Lo que no se tilda no se modifica.
     - Genera log en C:\ProgramData\CustomWin.
 
@@ -5962,7 +5964,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261016e"
+    Write-Log "Revision: 20261016f"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6062,7 +6064,49 @@ try {
 
     if ($Selected -contains "PowerShell") {
 
-        Write-Log "Correr Powershell esta en el menu, pero todavia no tiene una accion." "WARN"
+        try {
+
+            Write-Log "Ejecutando Correr Powershell."
+
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+            $PowerShellScript = Invoke-RestMethod `
+                -Uri "https://raw.githubusercontent.com/emijunke/winbasic/main/ps.ps1" `
+                -UseBasicParsing
+
+            if ($PowerShellScript -is [System.Array]) {
+
+                $PowerShellScript = $PowerShellScript -join "`n"
+            }
+            elseif ($PowerShellScript -isnot [string]) {
+
+                $PowerShellScript = [string]$PowerShellScript
+            }
+
+
+            if ([string]::IsNullOrWhiteSpace($PowerShellScript)) {
+
+                throw "ps.ps1 llego vacio."
+            }
+
+
+            if ($PowerShellScript.Contains("lines collapsed")) {
+
+                throw "ps.ps1 no se puede ejecutar: el archivo subido esta colapsado."
+            }
+
+
+            Invoke-Expression $PowerShellScript
+
+            Write-Log "Correr Powershell termino." "OK"
+
+        }
+        catch {
+
+            $FailLine = $_.InvocationInfo.ScriptLineNumber
+
+            Add-DeployFailure "Correr Powershell (linea ${FailLine}): $($_.Exception.Message)"
+        }
     }
 
 
@@ -6167,7 +6211,7 @@ try {
 
         if ($Selected -contains "PowerShell") {
 
-            Write-Host "Correr Powershell               : SIN ACCION"
+            Write-Host "Correr Powershell               : EJECUTADO"
         }
 
 
