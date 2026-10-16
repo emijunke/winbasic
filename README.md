@@ -7,4 +7,4 @@ irm "https://raw.githubusercontent.com/emijunke/anydeskdeploy/main/Install-AnyDe
 irm "https://raw.githubusercontent.com/emijunke/anydeskdeploy/main/Install-Win-Basic.ps1" | iex
 
 # Custom WIN - seleccionable
-irm "https://raw.githubusercontent.com/emijunke/anydeskdeploy/main/CustomWin.ps1" | iex
+irm "https://raw.githubusercontent.com/emijunke/winbasic/main/CustomWin.ps1" | iex
