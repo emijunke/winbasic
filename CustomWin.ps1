@@ -19,6 +19,8 @@
       a la izquierda.
     - Correr Powershell baja y ejecuta
       https://raw.githubusercontent.com/emijunke/winbasic/main/ps.ps1
+    - Git, y las instalaciones que se agreguen despues, estan en bin.
+      Cada una es un ps1. Este menu solo la ejecuta.
     - Lo que no se tilda no se modifica.
     - Los nombres de la ventana estan al principio del archivo.
     - Genera log en C:\ProgramData\CustomWin.
@@ -46,7 +48,8 @@ $Script:Item_Chrome = "Google Chrome (ultima version, se omite si ya esta)"
 $Script:Item_PuTTY = "PuTTY (ultima version, se omite si ya esta)"
 $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
-$Script:Item_Office = "Office 2024 LTSC Professional Plus (descarga e instalación)"
+$Script:Item_Git = "Git (ultima version, se omite si ya esta)"
+$Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (activación)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
 $Script:Item_Firewall = "Deshabilitar el Firewall de Windows en todas las redes"
@@ -1253,6 +1256,84 @@ function Install-BasicApplications {
 
             Add-DeployFailure "$($Package.Name) (linea ${FailLine}): $($_.Exception.Message)"
         }
+    }
+}
+
+
+
+function Invoke-BinScript {
+
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+
+    $FileName = "$Name.ps1"
+
+    $Code = $null
+
+    $LocalPath = ""
+
+
+    if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+
+        $LocalPath = Join-Path $PSScriptRoot "bin\$FileName"
+    }
+
+
+    if ($LocalPath -and (Test-Path -LiteralPath $LocalPath)) {
+
+        Write-Log "Ejecutando bin\$FileName local."
+
+        $Code = [System.IO.File]::ReadAllText($LocalPath)
+    }
+    else {
+
+        $Uri = "https://raw.githubusercontent.com/emijunke/winbasic/main/bin/$FileName"
+
+        Write-Log "Ejecutando $Uri"
+
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        $Code = Invoke-RestMethod `
+            -Uri $Uri `
+            -UseBasicParsing
+    }
+
+
+    if ($Code -is [System.Array]) {
+
+        $Code = $Code -join "`n"
+    }
+    elseif ($Code -isnot [string]) {
+
+        $Code = [string]$Code
+    }
+
+
+    if ([string]::IsNullOrWhiteSpace($Code)) {
+
+        throw "$FileName llego vacio."
+    }
+
+
+    if ($Code.Contains("lines collapsed")) {
+
+        throw "$FileName no se puede ejecutar: el archivo subido esta colapsado."
+    }
+
+
+    $SavedErrorAction = $ErrorActionPreference
+
+
+    try {
+
+        Invoke-Expression $Code
+    }
+    finally {
+
+        $ErrorActionPreference = $SavedErrorAction
     }
 }
 
@@ -5501,6 +5582,10 @@ function Get-CustomWinChoices {
             Text = $Script:Item_VMware
         },
         @{
+            Id = "Git"
+            Text = $Script:Item_Git
+        },
+        @{
             Id = "Office"
             Text = $Script:Item_Office
         },
@@ -5987,7 +6072,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261016g"
+    Write-Log "Revision: 20261020a"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6066,6 +6151,22 @@ try {
     if ($AppNames.Count -gt 0) {
 
         Install-BasicApplications -Architecture $Architecture -Names $AppNames
+    }
+
+
+    if ($Selected -contains "Git") {
+
+        try {
+
+            Invoke-BinScript -Name "Git"
+
+        }
+        catch {
+
+            $FailLine = $_.InvocationInfo.ScriptLineNumber
+
+            Add-DeployFailure "Git (linea ${FailLine}): $($_.Exception.Message)"
+        }
     }
 
 
@@ -6223,6 +6324,12 @@ try {
 
                 Write-Host "AnyDesk ID                      : $Script:NewID"
             }
+        }
+
+
+        if ($Selected -contains "Git") {
+
+            Write-Host "Git                             : INSTALADO O YA PRESENTE"
         }
 
 
