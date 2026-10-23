@@ -1326,12 +1326,6 @@ function Invoke-BinScript {
     }
 
 
-    if (-not $Code.Contains("Fin del script.")) {
-
-        throw "$FileName esta incompleto. Subilo de nuevo desde el disco, sin pegarlo en el editor."
-    }
-
-
     $SavedErrorAction = $ErrorActionPreference
 
 
