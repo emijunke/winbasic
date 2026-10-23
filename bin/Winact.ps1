@@ -3,3 +3,4 @@
 
 # Mensaje de confirmación en tu consola
 Write-Output "Activación de Windows completada sin mostrar ventanas."
+"Fin del script."
