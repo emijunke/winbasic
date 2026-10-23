@@ -49,6 +49,7 @@ $Script:Item_PuTTY = "PuTTY (ultima version, se omite si ya esta)"
 $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
+$Script:Item_MobaXterm = "MobaXterm"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
@@ -5592,6 +5593,10 @@ function Get-CustomWinChoices {
             Text = $Script:Item_Git
         },
         @{
+            Id = "MobaXterm"
+            Text = $Script:Item_MobaXterm
+        },
+        @{
             Id = "Office"
             Text = $Script:Item_Office
         },
@@ -6078,7 +6083,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261020c"
+    Write-Log "Revision: 20261023a"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6172,6 +6177,22 @@ try {
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
             Add-DeployFailure "Git (linea ${FailLine}): $($_.Exception.Message)"
+        }
+    }
+
+
+    if ($Selected -contains "MobaXterm") {
+
+        try {
+
+            Invoke-BinScript -Name "MobaXterm"
+
+        }
+        catch {
+
+            $FailLine = $_.InvocationInfo.ScriptLineNumber
+
+            Add-DeployFailure "MobaXterm (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
@@ -6336,6 +6357,12 @@ try {
         if ($Selected -contains "Git") {
 
             Write-Host "Git                             : INSTALADO O YA PRESENTE"
+        }
+
+
+        if ($Selected -contains "MobaXterm") {
+
+            Write-Host "MobaXterm                       : COPIADO"
         }
 
 
