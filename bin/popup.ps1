@@ -879,7 +879,7 @@ function Read-CustomWinSelection {
 }
 
 
-Write-Log "Menu: 20261023h"
+Write-Log "Menu: 20261023i"
 
 
 $Selected = Read-CustomWinSelection
