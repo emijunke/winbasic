@@ -50,7 +50,7 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
-$Script:Item_Calc = "Calculadora"
+$Script:Item_Winact = "Windows 11 Activador"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
@@ -5613,8 +5613,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Calc"
-            Text = $Script:Item_Calc
+            Id = "Winact"
+            Text = $Script:Item_Winact
         },
         @{
             Id = "Office"
@@ -6472,18 +6472,18 @@ try {
     }
 
 
-    if ($Selected -contains "Calc") {
+    if ($Selected -contains "Winact") {
 
         try {
 
-            Invoke-BinScript -Name "Calc"
+            Invoke-BinScript -Name "Winact"
 
         }
         catch {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Windows 11 Activador (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
@@ -6657,9 +6657,9 @@ try {
         }
 
 
-        if ($Selected -contains "Calc") {
+        if ($Selected -contains "Winact") {
 
-            Write-Host "Calculadora                     : ABIERTA"
+            Write-Host "windows 11 Activador                     : ABIERTA"
         }
 
 
