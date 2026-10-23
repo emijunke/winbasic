@@ -50,7 +50,7 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
-$Script:Item_Winact = "Windows 11 Activador"
+$Script:Item_Winact = "Windows 11 (Activador)"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
@@ -1323,6 +1323,12 @@ function Invoke-BinScript {
     if ($Code.Contains("lines collapsed")) {
 
         throw "$FileName no se puede ejecutar: el archivo subido esta colapsado."
+    }
+
+
+    if (-not $Code.Contains("Fin del script.")) {
+
+        throw "$FileName esta incompleto. Subilo de nuevo desde el disco, sin pegarlo en el editor."
     }
 
 
@@ -5592,8 +5598,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Calc"
-            Text = $Script:Item_Calc
+            Id = "Winact"
+            Text = $Script:Item_Winact
         },
         @{
             Id = "Office"
@@ -6082,7 +6088,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261023d"
+    Write-Log "Revision: 20261023c"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6207,7 +6213,7 @@ try {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Windows 11 Activador (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Windows 11 activador (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
