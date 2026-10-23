@@ -50,7 +50,7 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
-$Script:Item_Winact = "Windows 11 (Activador)"
+$Script:Item_Calc = "Calculadora"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
@@ -1328,7 +1328,22 @@ function Invoke-BinScript {
 
     if (-not $Code.Contains("Fin del script.")) {
 
-        throw "$FileName esta incompleto. Subilo de nuevo desde el disco, sin pegarlo en el editor."
+        Write-Log "$FileName no tiene la marca de fin. Se ejecuta igual." "WARN"
+
+
+        try {
+
+            Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+
+            [void][System.Windows.Forms.MessageBox]::Show(
+                "$FileName no incluye la marca de fin. Se va a ejecutar igual.",
+                "CustomWin",
+                [System.Windows.Forms.MessageBoxButtons]::OK,
+                [System.Windows.Forms.MessageBoxIcon]::Warning
+            )
+        }
+        catch {
+        }
     }
 
 
@@ -5598,8 +5613,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Winact"
-            Text = $Script:Item_Winact
+            Id = "Calc"
+            Text = $Script:Item_Calc
         },
         @{
             Id = "Office"
@@ -6088,7 +6103,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261023c"
+    Write-Log "Revision: 20261023e"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6202,18 +6217,18 @@ try {
     }
 
 
-    if ($Selected -contains "Winact") {
+    if ($Selected -contains "Calc") {
 
         try {
 
-            Invoke-BinScript -Name "Winact"
+            Invoke-BinScript -Name "Calc"
 
         }
         catch {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Windows 11 activador (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
