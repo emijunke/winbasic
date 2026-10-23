@@ -50,7 +50,7 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
-$Script:Item_Winact = "Windows 11 ACT"
+$Script:Item_Calc = "Calculadora"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
@@ -5613,8 +5613,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Winact"
-            Text = $Script:Item_Winact
+            Id = "Calc"
+            Text = $Script:Item_Calc
         },
         @{
             Id = "Office"
@@ -5782,6 +5782,21 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Choices = @(Get-CustomWinChoices)
 
+    $Canvas = [System.Drawing.Color]::FromArgb(244, 246, 248)
+
+    $Ink = [System.Drawing.Color]::FromArgb(15, 23, 42)
+
+    $Muted = [System.Drawing.Color]::FromArgb(71, 85, 105)
+
+    $Accent = [System.Drawing.Color]::FromArgb(37, 99, 235)
+
+    $AccentDark = [System.Drawing.Color]::FromArgb(29, 78, 216)
+
+    $Line = [System.Drawing.Color]::FromArgb(226, 232, 240)
+
+    $Card = [System.Drawing.Color]::White
+
+
     $Form = New-Object System.Windows.Forms.Form
 
     $Form.Text = "CustomWin"
@@ -5794,24 +5809,45 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Form.MinimizeBox = $false
 
-    $Form.ClientSize = New-Object System.Drawing.Size(640, 560)
+    $Form.ClientSize = New-Object System.Drawing.Size(700, 676)
 
     $Form.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 
+    $Form.BackColor = $Canvas
+
+    $Form.ForeColor = $Ink
+
     $Form.TopMost = $true
+
+
+    $Header = New-Object System.Windows.Forms.Panel
+
+    $Header.Location = New-Object System.Drawing.Point(0, 0)
+
+    $Header.Size = New-Object System.Drawing.Size(700, 108)
+
+    $Header.BackColor = $Accent
+
+    $Form.Controls.Add($Header)
 
 
     $Title = New-Object System.Windows.Forms.Label
 
     $Title.Text = "Elegi que queres aplicar"
 
-    $Title.AutoSize = $true
+    $Title.AutoSize = $false
 
-    $Title.Font = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
+    $Title.Size = New-Object System.Drawing.Size(640, 36)
 
-    $Title.Location = New-Object System.Drawing.Point(24, 18)
+    $Title.Font = New-Object System.Drawing.Font("Segoe UI", 18, [System.Drawing.FontStyle]::Bold)
 
-    $Form.Controls.Add($Title)
+    $Title.ForeColor = [System.Drawing.Color]::White
+
+    $Title.BackColor = $Accent
+
+    $Title.Location = New-Object System.Drawing.Point(28, 26)
+
+    $Header.Controls.Add($Title)
 
 
     $Hint = New-Object System.Windows.Forms.Label
@@ -5820,24 +5856,167 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Hint.AutoSize = $false
 
-    $Hint.Size = New-Object System.Drawing.Size(590, 28)
+    $Hint.Size = New-Object System.Drawing.Size(640, 24)
 
-    $Hint.Location = New-Object System.Drawing.Point(24, 56)
+    $Hint.Font = New-Object System.Drawing.Font("Segoe UI", 10)
 
-    $Form.Controls.Add($Hint)
+    $Hint.ForeColor = [System.Drawing.Color]::FromArgb(219, 234, 254)
+
+    $Hint.BackColor = $Accent
+
+    $Hint.Location = New-Object System.Drawing.Point(28, 66)
+
+    $Header.Controls.Add($Hint)
+
+
+    $ListCard = New-Object System.Windows.Forms.Panel
+
+    $ListCard.Location = New-Object System.Drawing.Point(24, 128)
+
+    $ListCard.Size = New-Object System.Drawing.Size(652, 452)
+
+    $ListCard.BackColor = $Line
+
+    $Form.Controls.Add($ListCard)
 
 
     $List = New-Object System.Windows.Forms.CheckedListBox
 
-    $List.Location = New-Object System.Drawing.Point(24, 96)
+    $List.Location = New-Object System.Drawing.Point(1, 1)
 
-    $List.Size = New-Object System.Drawing.Size(592, 360)
+    $List.Size = New-Object System.Drawing.Size(650, 450)
 
     $List.CheckOnClick = $true
 
-    $List.BorderStyle = "FixedSingle"
+    $List.BorderStyle = "None"
+
+    $List.IntegralHeight = $false
+
+    $List.DrawMode = "OwnerDrawFixed"
+
+    $List.ItemHeight = 36
 
     $List.Font = New-Object System.Drawing.Font("Segoe UI", 11)
+
+    $List.BackColor = $Card
+
+    $List.ForeColor = $Ink
+
+    $script:CustomWinHoverIndex = -1
+
+
+    $List.Add_DrawItem({
+
+        param($sender, $e)
+
+        if ($e.Index -lt 0) { return }
+
+        $Graphics = $e.Graphics
+
+        $Graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+
+        $Bounds = $e.Bounds
+
+        $IsChecked = $List.GetItemChecked($e.Index)
+
+        $IsHot = $e.Index -eq $script:CustomWinHoverIndex
+
+        $Back = [System.Drawing.Color]::White
+
+        if ($IsChecked) {
+
+            $Back = [System.Drawing.Color]::FromArgb(239, 246, 255)
+
+        }
+        elseif ($IsHot) {
+
+            $Back = [System.Drawing.Color]::FromArgb(248, 250, 252)
+        }
+
+        $BackBrush = New-Object System.Drawing.SolidBrush $Back
+
+        $Graphics.FillRectangle($BackBrush, $Bounds)
+
+        $BackBrush.Dispose()
+
+        $Box = New-Object System.Drawing.Rectangle(($Bounds.X + 16), ($Bounds.Y + 9), 18, 18)
+
+        $Blue = [System.Drawing.Color]::FromArgb(37, 99, 235)
+
+        if ($IsChecked) {
+
+            $Fill = New-Object System.Drawing.SolidBrush $Blue
+
+            $Graphics.FillRectangle($Fill, $Box)
+
+            $Fill.Dispose()
+
+            $MarkPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::White), 2
+
+            $Points = New-Object 'System.Drawing.Point[]' 3
+
+            $Points[0] = New-Object System.Drawing.Point (($Box.X + 4), ($Box.Y + 9))
+
+            $Points[1] = New-Object System.Drawing.Point (($Box.X + 8), ($Box.Y + 13))
+
+            $Points[2] = New-Object System.Drawing.Point (($Box.X + 14), ($Box.Y + 5))
+
+            $Graphics.DrawLines($MarkPen, $Points)
+
+            $MarkPen.Dispose()
+
+        }
+        else {
+
+            $BoxPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(148, 163, 184))
+
+            $Graphics.DrawRectangle($BoxPen, $Box)
+
+            $BoxPen.Dispose()
+        }
+
+        $TextBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(15, 23, 42))
+
+        $TextRect = New-Object System.Drawing.Rectangle(($Bounds.X + 48), $Bounds.Y, ($Bounds.Width - 60), $Bounds.Height)
+
+        $Format = New-Object System.Drawing.StringFormat
+
+        $Format.LineAlignment = [System.Drawing.StringAlignment]::Center
+
+        $Format.Trimming = [System.Drawing.StringTrimming]::EllipsisCharacter
+
+        $Format.FormatFlags = [System.Drawing.StringFormatFlags]::NoWrap
+
+        $Graphics.DrawString([string]$List.Items[$e.Index], $e.Font, $TextBrush, $TextRect, $Format)
+
+        $TextBrush.Dispose()
+
+        $Format.Dispose()
+
+    }.GetNewClosure())
+
+    $List.Add_MouseMove({
+
+        param($sender, $e)
+
+        $Index = $List.IndexFromPoint($e.Location)
+
+        if ($Index -ne $script:CustomWinHoverIndex) {
+
+            $script:CustomWinHoverIndex = $Index
+
+            $List.Invalidate()
+        }
+
+    }.GetNewClosure())
+
+    $List.Add_MouseLeave({
+
+        $script:CustomWinHoverIndex = -1
+
+        $List.Invalidate()
+
+    }.GetNewClosure())
 
 
     foreach ($Choice in $Choices) {
@@ -5846,16 +6025,86 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
     }
 
 
-    $Form.Controls.Add($List)
+    $ListCard.Controls.Add($List)
+
+
+    $Notice = New-Object System.Windows.Forms.Label
+
+    $Notice.Text = ""
+
+    $Notice.AutoSize = $false
+
+    $Notice.Size = New-Object System.Drawing.Size(640, 20)
+
+    $Notice.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+
+    $Notice.ForeColor = [System.Drawing.Color]::FromArgb(185, 28, 28)
+
+    $Notice.BackColor = $Canvas
+
+    $Notice.Location = New-Object System.Drawing.Point(24, 588)
+
+    $Form.Controls.Add($Notice)
+
+
+    $List.Add_SelectedIndexChanged({
+
+        $Notice.Text = ""
+
+    }.GetNewClosure())
+
+
+    function Set-CustomWinFlatButton {
+
+        param(
+            $Button,
+            [bool]$Primary
+        )
+
+        $Button.FlatStyle = "Flat"
+
+        $Button.Cursor = [System.Windows.Forms.Cursors]::Hand
+
+        $Button.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+
+        if ($Primary) {
+
+            $Button.BackColor = [System.Drawing.Color]::FromArgb(37, 99, 235)
+
+            $Button.ForeColor = [System.Drawing.Color]::White
+
+            $Button.FlatAppearance.BorderSize = 0
+
+            $Button.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(29, 78, 216)
+
+            $Button.FlatAppearance.MouseDownBackColor = [System.Drawing.Color]::FromArgb(30, 64, 175)
+
+            return
+        }
+
+        $Button.BackColor = [System.Drawing.Color]::White
+
+        $Button.ForeColor = [System.Drawing.Color]::FromArgb(15, 23, 42)
+
+        $Button.FlatAppearance.BorderSize = 1
+
+        $Button.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(203, 213, 225)
+
+        $Button.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(241, 245, 249)
+
+        $Button.FlatAppearance.MouseDownBackColor = [System.Drawing.Color]::FromArgb(226, 232, 240)
+    }
 
 
     $MarkAll = New-Object System.Windows.Forms.Button
 
     $MarkAll.Text = "Marcar todo"
 
-    $MarkAll.Location = New-Object System.Drawing.Point(24, 476)
+    $MarkAll.Location = New-Object System.Drawing.Point(24, 616)
 
-    $MarkAll.Size = New-Object System.Drawing.Size(130, 36)
+    $MarkAll.Size = New-Object System.Drawing.Size(132, 40)
+
+    Set-CustomWinFlatButton -Button $MarkAll -Primary $false
 
     $MarkAll.Add_Click({
 
@@ -5863,6 +6112,8 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
             $List.SetItemChecked($Index, $true)
         }
+
+        $Notice.Text = ""
 
     }.GetNewClosure())
 
@@ -5873,9 +6124,11 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $ClearAll.Text = "Desmarcar todo"
 
-    $ClearAll.Location = New-Object System.Drawing.Point(164, 476)
+    $ClearAll.Location = New-Object System.Drawing.Point(164, 616)
 
-    $ClearAll.Size = New-Object System.Drawing.Size(140, 36)
+    $ClearAll.Size = New-Object System.Drawing.Size(148, 40)
+
+    Set-CustomWinFlatButton -Button $ClearAll -Primary $false
 
     $ClearAll.Add_Click({
 
@@ -5883,6 +6136,8 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
             $List.SetItemChecked($Index, $false)
         }
+
+        $Notice.Text = ""
 
     }.GetNewClosure())
 
@@ -5893,11 +6148,13 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Cancel.Text = "Cancelar"
 
-    $Cancel.Location = New-Object System.Drawing.Point(360, 476)
+    $Cancel.Location = New-Object System.Drawing.Point(404, 616)
 
-    $Cancel.Size = New-Object System.Drawing.Size(120, 36)
+    $Cancel.Size = New-Object System.Drawing.Size(120, 40)
 
     $Cancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+
+    Set-CustomWinFlatButton -Button $Cancel -Primary $false
 
     $Form.CancelButton = $Cancel
 
@@ -5908,9 +6165,11 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Apply.Text = "Aplicar"
 
-    $Apply.Location = New-Object System.Drawing.Point(490, 476)
+    $Apply.Location = New-Object System.Drawing.Point(536, 616)
 
-    $Apply.Size = New-Object System.Drawing.Size(126, 36)
+    $Apply.Size = New-Object System.Drawing.Size(140, 40)
+
+    Set-CustomWinFlatButton -Button $Apply -Primary $true
 
     $Apply.Add_Click({
 
@@ -5928,11 +6187,7 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
         if (-not $AnyChecked) {
 
-            [void][System.Windows.Forms.MessageBox]::Show(
-                $Form,
-                "Tilda al menos una opcion.",
-                "CustomWin"
-            )
+            $Notice.Text = "Tilda al menos una opcion."
 
             return
         }
@@ -6103,7 +6358,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261023e"
+    Write-Log "Revision: 20261023f"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6217,18 +6472,18 @@ try {
     }
 
 
-    if ($Selected -contains "Winact") {
+    if ($Selected -contains "Calc") {
 
         try {
 
-            Invoke-BinScript -Name "Winact"
+            Invoke-BinScript -Name "Calc"
 
         }
         catch {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Windows 11 ACT (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
