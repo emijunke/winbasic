@@ -294,9 +294,11 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Title = New-Object System.Windows.Forms.Label
 
-    $Title.Text = "Elegi que queres aplicar"
+    $Title.Text = "-- SELECCIONA QUE QUERES APLICAR --"
 
     $Title.AutoSize = $false
+
+    $Title.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 
     $Title.Size = New-Object System.Drawing.Size(640, 36)
 
