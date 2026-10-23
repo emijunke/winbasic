@@ -319,6 +319,8 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Hint.AutoSize = $false
 
+    $Title.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+
     $Hint.Size = New-Object System.Drawing.Size(640, 24)
 
     $Hint.Font = New-Object System.Drawing.Font("Segoe UI", 10)
