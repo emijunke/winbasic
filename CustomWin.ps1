@@ -5613,8 +5613,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Calc"
-            Text = $Script:Item_Calc
+            Id = "Winact"
+            Text = $Script:Item_Winact
         },
         @{
             Id = "Office"
