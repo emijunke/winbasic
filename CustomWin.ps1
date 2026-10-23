@@ -6213,7 +6213,7 @@ try {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Windows 11 (Activador) (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Windows 11 activador (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
