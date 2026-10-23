@@ -52,6 +52,7 @@ $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
+$Script:Item_WinACT = "Windows 11 (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
 $Script:Item_Firewall = "Deshabilitar el Firewall de Windows en todas las redes"
 $Script:Item_EscritorioRemoto = "Habilitar Escritorio remoto sin autenticacion de nivel de red"
@@ -5595,6 +5596,10 @@ function Get-CustomWinChoices {
         @{
             Id = "MobaXterm"
             Text = $Script:Item_MobaXterm
+        },
+        @{
+            Id = " WinACT "
+            Text = $Script:Item_WinACT
         },
         @{
             Id = "Office"
