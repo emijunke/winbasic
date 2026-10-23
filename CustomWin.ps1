@@ -50,9 +50,9 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
+$Script:Item_Winact = "Windows 11 (Activador)"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
-$Script:Item_WinACT = "Windows 11 (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
 $Script:Item_Firewall = "Deshabilitar el Firewall de Windows en todas las redes"
 $Script:Item_EscritorioRemoto = "Habilitar Escritorio remoto sin autenticacion de nivel de red"
@@ -5598,8 +5598,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "WinACT"
-            Text = $Script:Item_WinACT
+            Id = "Winact"
+            Text = $Script:Item_Winact
         },
         @{
             Id = "Office"
@@ -6088,7 +6088,7 @@ try {
 
     Write-Log "Inicio de CustomWin."
 
-    Write-Log "Revision: 20261023a"
+    Write-Log "Revision: 20261023c"
 
     Write-Log "Equipo: $env:COMPUTERNAME"
 
@@ -6198,6 +6198,22 @@ try {
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
             Add-DeployFailure "MobaXterm (linea ${FailLine}): $($_.Exception.Message)"
+        }
+    }
+
+
+    if ($Selected -contains "Calc") {
+
+        try {
+
+            Invoke-BinScript -Name "Calc"
+
+        }
+        catch {
+
+            $FailLine = $_.InvocationInfo.ScriptLineNumber
+
+            Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
@@ -6368,6 +6384,12 @@ try {
         if ($Selected -contains "MobaXterm") {
 
             Write-Host "MobaXterm                       : COPIADO"
+        }
+
+
+        if ($Selected -contains "Calc") {
+
+            Write-Host "Calculadora                     : ABIERTA"
         }
 
 
