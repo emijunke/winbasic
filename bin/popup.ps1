@@ -20,7 +20,7 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
-$Script:Item_Winact = "Windows 11 Activador"
+$Script:Item_Calc = "Calculadora"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
@@ -70,8 +70,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Winact"
-            Text = $Script:Item_Winact
+            Id = "Calc"
+            Text = $Script:Item_Calc
         },
         @{
             Id = "Office"
@@ -315,7 +315,7 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Hint = New-Object System.Windows.Forms.Label
 
-    $Hint.Text = ""
+    $Hint.Text = "Nada empieza tildado. Marca lo que queres aplicar. Lo demas no se modifica."
 
     $Hint.AutoSize = $false
 
@@ -698,7 +698,7 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
         $Left = [int](($Width - $ContentWidth) / 2)
 
-        $Title.SetBounds($Left, 40, $ContentWidth, 48)
+        $Title.SetBounds(0, 32, $Width, 56)
 
         $Hint.SetBounds($Left, 96, $ContentWidth, 28)
 
@@ -881,7 +881,7 @@ function Read-CustomWinSelection {
 }
 
 
-Write-Log "Menu: 20261023i"
+Write-Log "Menu: 20261023j"
 
 
 $Selected = Read-CustomWinSelection
@@ -976,18 +976,18 @@ if ($Selected -contains "MobaXterm") {
 }
 
 
-if ($Selected -contains "Winact") {
+if ($Selected -contains "Calc") {
 
     try {
 
-        Invoke-BinScript -Name "Winact"
+        Invoke-BinScript -Name "Calc"
 
     }
     catch {
 
         $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-        Add-DeployFailure "Windows 11 Activador (linea ${FailLine}): $($_.Exception.Message)"
+        Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
     }
 }
 
@@ -1161,9 +1161,9 @@ if ($Script:Failures.Count -eq 0) {
     }
 
 
-    if ($Selected -contains "Winact") {
+    if ($Selected -contains "Calc") {
 
-        Write-Host "Windows 11 Activador                    : ABIERTA"
+        Write-Host "Calculadora                     : ABIERTA"
     }
 
 
