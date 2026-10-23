@@ -315,7 +315,7 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Hint = New-Object System.Windows.Forms.Label
 
-    $Hint.Text = "Nada empieza tildado. Marca lo que queres aplicar. Lo demas no se modifica."
+    $Hint.Text = ""
 
     $Hint.AutoSize = $false
 
