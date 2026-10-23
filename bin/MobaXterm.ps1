@@ -50,28 +50,34 @@ function Test-MobaAdministrator {
 function Save-MobaXtermFolder {
 
     param (
-
-        [Parameter(Mandatory = $true)]
-        [string]$RepoPath,
-
         [Parameter(Mandatory = $true)]
         [string]$DestDir
     )
 
 
-    $Api = "https://api.github.com/repos/emijunke/winbasic/contents/$RepoPath"
+    $Api = "https://api.github.com/repos/emijunke/winbasic/git/trees/main?recursive=1"
 
-    $Items = @(
-        Invoke-RestMethod `
-            -Uri $Api `
-            -Headers @{ "User-Agent" = "Install-Win-Basic" }
-    )
+    Write-MobaLog "Leyendo la lista de archivos de mobaxterm."
 
 
-    if ($Items.Count -eq 0) {
+    $Page = Invoke-WebRequest `
+        -Uri $Api `
+        -Headers @{ "User-Agent" = "Install-Win-Basic" } `
+        -UseBasicParsing
 
-        throw "La carpeta $RepoPath del repositorio esta vacia."
+
+    $Pattern = '"path":"(mobaxterm/[^"]+)","mode":"[^"]+","type":"blob","sha":"[^"]+","size":(\d+)'
+
+    $Found = [regex]::Matches([string]$Page.Content, $Pattern)
+
+
+    if ($Found.Count -eq 0) {
+
+        throw "No se encontraron archivos en la carpeta mobaxterm del repositorio."
     }
+
+
+    Write-MobaLog ("Archivos a copiar: {0}" -f $Found.Count)
 
 
     if (-not (Test-Path -LiteralPath $DestDir)) {
@@ -80,73 +86,58 @@ function Save-MobaXtermFolder {
     }
 
 
-    foreach ($Item in $Items) {
+    foreach ($Match in $Found) {
 
-        $Name = [string]$Item.name
+        $RepoFile = [string]$Match.Groups[1].Value
+
+        $Expected = [int64]$Match.Groups[2].Value
+
+        $Relative = $RepoFile.Substring("mobaxterm/".Length)
+
+        $Parts = @($Relative -split "[\\/]")
 
 
         if (
-            [string]::IsNullOrWhiteSpace($Name) -or
-            $Name -match '[\\/:]' -or
-            $Name -eq "." -or
-            $Name -eq ".."
+            [string]::IsNullOrWhiteSpace($Relative) -or
+            $Relative.StartsWith("/") -or
+            $Relative.StartsWith("\") -or
+            $Parts -contains ".." -or
+            $Parts -contains "."
         ) {
 
-            throw "Nombre de archivo no valido en ${RepoPath}: $Name"
+            throw "Ruta no valida: $RepoFile"
         }
 
 
-        $Target = Join-Path $DestDir $Name
+        $Target = Join-Path $DestDir ($Relative -replace "/", "\")
+
+        $Parent = Split-Path -Parent $Target
 
 
-        if ([string]$Item.type -eq "dir") {
+        if (-not (Test-Path -LiteralPath $Parent)) {
 
-            Save-MobaXtermFolder -RepoPath ([string]$Item.path) -DestDir $Target
-
-            continue
+            New-Item -ItemType Directory -Path $Parent -Force | Out-Null
         }
 
 
-        if ([string]$Item.type -ne "file") {
-
-            continue
-        }
-
-
-        $Url = [string]$Item.download_url
-
-
-        if ($Url -notlike "https://raw.githubusercontent.com/emijunke/winbasic/*") {
-
-            throw "La URL de $Name no es del repositorio."
-        }
-
-
-        $Expected = [int64]$Item.size
-
-        $SameSize = $false
+        $Url = "https://raw.githubusercontent.com/emijunke/winbasic/main/$RepoFile"
 
 
         if ((Test-Path -LiteralPath $Target) -and $Expected -gt 0) {
 
             $Current = (Get-Item -LiteralPath $Target).Length
 
+
             if ($Current -eq $Expected) {
 
-                $SameSize = $true
+                Write-MobaLog "$Relative ya esta en $Target. Se omite." "OK"
+
+                continue
             }
         }
 
 
-        if ($SameSize) {
-
-            Write-MobaLog "$Name ya esta en $Target. Se omite." "OK"
-
-            continue
-        }
-
-
-        Write-MobaLog "Descargando $Name..."
+        Write-MobaLog "Descargando $Relative..."
 
         Write-MobaLog "Origen: $Url"
 
@@ -159,7 +150,7 @@ function Save-MobaXtermFolder {
 
         if (-not (Test-Path -LiteralPath $Target)) {
 
-            throw "No se encontro $Name despues de descargarlo."
+            throw "No se encontro $Relative despues de descargarlo."
         }
 
 
@@ -168,11 +159,11 @@ function Save-MobaXtermFolder {
 
         if ($Expected -gt 0 -and $Size -ne $Expected) {
 
-            throw "$Name quedo incompleto. Esperado: $Expected bytes. Recibido: $Size bytes."
+            throw "$Relative quedo incompleto. Esperado: $Expected bytes. Recibido: $Size bytes."
         }
 
 
-        Write-MobaLog ("{0} copiado. Tamano: {1:N1} MB" -f $Name, ($Size / 1MB)) "OK"
+        Write-MobaLog ("{0} copiado. Tamano: {1:N1} MB" -f $Relative, ($Size / 1MB)) "OK"
     }
 }
 
@@ -233,7 +224,7 @@ function New-MobaXtermShortcut {
 
 function Install-MobaXtermPortable {
 
-    Write-MobaLog "Revision MobaXterm: 20261023a"
+    Write-MobaLog "Revision MobaXterm: 20261023b"
 
 
     if (-not (Test-MobaAdministrator)) {
@@ -246,7 +237,7 @@ function Install-MobaXtermPortable {
 
     Write-MobaLog "Copiando MobaXterm a $DestRoot."
 
-    Save-MobaXtermFolder -RepoPath "mobaxterm" -DestDir $DestRoot
+    Save-MobaXtermFolder -DestDir $DestRoot
 
 
     $ExePath = Join-Path $DestRoot "MobaXterm.exe"
