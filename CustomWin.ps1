@@ -5598,7 +5598,7 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = " WinACT "
+            Id = "WinACT"
             Text = $Script:Item_WinACT
         },
         @{
