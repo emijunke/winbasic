@@ -6202,18 +6202,18 @@ try {
     }
 
 
-    if ($Selected -contains "Calc") {
+    if ($Selected -contains "Winact") {
 
         try {
 
-            Invoke-BinScript -Name "Calc"
+            Invoke-BinScript -Name "Winact"
 
         }
         catch {
 
             $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-            Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
+            Add-DeployFailure "Windows 11 (Activador) (linea ${FailLine}): $($_.Exception.Message)"
         }
     }
 
