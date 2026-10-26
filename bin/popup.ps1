@@ -20,10 +20,11 @@ $Script:Item_WinSCP = "WinSCP (ultima version, se omite si ya esta)"
 $Script:Item_VMware = "VMware Tools (ultima version, se omite si ya esta)"
 $Script:Item_Git = "Git (ultima version, se omite si ya esta)"
 $Script:Item_MobaXterm = "MobaXterm"
-$Script:Item_Winact = "Windows 11 Activador"
+$Script:Item_Calc = "Calculadora"
 $Script:Item_Office = "Office 2024 LTSC Professional Plus, espanol, sin Skype Empresarial ni OneDrive"
 $Script:Item_Powershell = "Office 2024 LTSC Professional Plus (Activacion)"
 $Script:Item_AnyDesk = "AnyDesk oculto, con password de acceso desatendido"
+$Script:Item_AnydeskUninstall = "Anydesk Uninstall"
 $Script:Item_Firewall = "Deshabilitar el Firewall de Windows en todas las redes"
 $Script:Item_EscritorioRemoto = "Habilitar Escritorio remoto sin autenticacion de nivel de red"
 $Script:Item_IPv6 = "Deshabilitar IPv6 en todo el sistema"
@@ -70,8 +71,8 @@ function Get-CustomWinChoices {
             Text = $Script:Item_MobaXterm
         },
         @{
-            Id = "Winact"
-            Text = $Script:Item_Winact
+            Id = "Calc"
+            Text = $Script:Item_Calc
         },
         @{
             Id = "Office"
@@ -84,6 +85,10 @@ function Get-CustomWinChoices {
         @{
             Id = "AnyDesk"
             Text = $Script:Item_AnyDesk
+        },
+        @{
+            Id = "AnydeskUninstall"
+            Text = $Script:Item_AnydeskUninstall
         },
         @{
             Id = "Firewall"
@@ -315,11 +320,9 @@ public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool
 
     $Hint = New-Object System.Windows.Forms.Label
 
-    $Hint.Text = ""
+    $Hint.Text = "Nada empieza tildado. Marca lo que queres aplicar. Lo demas no se modifica."
 
     $Hint.AutoSize = $false
-
-    $Title.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 
     $Hint.Size = New-Object System.Drawing.Size(640, 24)
 
@@ -883,7 +886,7 @@ function Read-CustomWinSelection {
 }
 
 
-Write-Log "Menu: 20261023j"
+Write-Log "Menu: 20261026a"
 
 
 $Selected = Read-CustomWinSelection
@@ -933,6 +936,22 @@ if ($Selected -contains "AnyDesk") {
 }
 
 
+if ($Selected -contains "AnydeskUninstall") {
+
+    try {
+
+        Invoke-BinScript -Name "uninstallanydesk"
+
+    }
+    catch {
+
+        $FailLine = $_.InvocationInfo.ScriptLineNumber
+
+        Add-DeployFailure "Anydesk Uninstall (linea ${FailLine}): $($_.Exception.Message)"
+    }
+}
+
+
 $AppNames = @(
     $Selected | Where-Object {
         $_ -in @("Notepad++", "7-Zip", "Firefox", "Google Chrome", "PuTTY", "WinSCP", "VMware Tools")
@@ -978,18 +997,18 @@ if ($Selected -contains "MobaXterm") {
 }
 
 
-if ($Selected -contains "Winact") {
+if ($Selected -contains "Calc") {
 
     try {
 
-        Invoke-BinScript -Name "Winact"
+        Invoke-BinScript -Name "Calc"
 
     }
     catch {
 
         $FailLine = $_.InvocationInfo.ScriptLineNumber
 
-        Add-DeployFailure "Windows 11 Activador (linea ${FailLine}): $($_.Exception.Message)"
+        Add-DeployFailure "Calculadora (linea ${FailLine}): $($_.Exception.Message)"
     }
 }
 
@@ -1151,6 +1170,12 @@ if ($Script:Failures.Count -eq 0) {
     }
 
 
+    if ($Selected -contains "AnydeskUninstall") {
+
+        Write-Host "Anydesk Uninstall               : EJECUTADO"
+    }
+
+
     if ($Selected -contains "Git") {
 
         Write-Host "Git                             : INSTALADO O YA PRESENTE"
@@ -1163,9 +1188,9 @@ if ($Script:Failures.Count -eq 0) {
     }
 
 
-    if ($Selected -contains "Winact") {
+    if ($Selected -contains "Calc") {
 
-        Write-Host "Windows 11 Activador                     : ABIERTA"
+        Write-Host "Calculadora                     : ABIERTA"
     }
 
 
